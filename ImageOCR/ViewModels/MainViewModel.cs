@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 using System.Windows.Input;
 using ImageOCR.Models;
 using ImageOCR.Services;
+using System.Diagnostics;
 
 namespace ImageOCR.ViewModels
 {
@@ -20,7 +21,8 @@ namespace ImageOCR.ViewModels
 
         #region public properties
         public ICommand ImportImageCommand { get; set; }
-        public static ObservableCollection<object> List { get; set; }
+        public ICommand OCRCommand { get; set; }
+
         public string HelloWord { get => _helloWord; set => SetProperty(ref _helloWord, value); }
         public Image Image { get => _image; set => SetProperty(ref _image, value); }
         #endregion
@@ -45,6 +47,7 @@ namespace ImageOCR.ViewModels
         /// </summary>
         void InitCommand()
         {
+            //// handle import image and init image
             ImportImageCommand = new RelayCommand<object>(p => { return true; }, p =>
             {
                 // Sử dụng OpenFileDialog để chọn file ảnh
@@ -63,6 +66,44 @@ namespace ImageOCR.ViewModels
                         Path = openFileDialog.FileName,
                         Capacity = new System.IO.FileInfo(openFileDialog.FileName).Length / 1024.0
                     };
+                }
+            });
+
+            //// handle OCR image
+            OCRCommand = new RelayCommand<object>(p => Image != null && !string.IsNullOrEmpty(Image.Path), p =>
+            {
+                try
+                {
+                    /// train data: https://github.com/tesseract-ocr/tessdata
+                    /// download and import to _tessdata folder
+                    using (var img = Tesseract.Pix.LoadFromFile(Image.Path))
+                    {
+                        // Tesseract engine ENG
+                        using (var engine = new Tesseract.TesseractEngine(@"./_tessdata", "eng", Tesseract.EngineMode.Default))
+                        {
+                            // OCR
+                            using (var page = engine.Process(img))
+                            {
+                                // get text from image
+                                Image.TextEng = page.GetText();
+                            }
+                        }
+
+                        // Tesseract engine Vi
+                        using (var engine = new Tesseract.TesseractEngine(@"./_tessdata", "vie", Tesseract.EngineMode.Default))
+                        {
+                            // OCR
+                            using (var page = engine.Process(img))
+                            {
+                                // get text from image
+                                Image.TextVi = page.GetText();
+                            }
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Debug.WriteLine($"Error during OCR: {ex.Message}");
                 }
             });
 

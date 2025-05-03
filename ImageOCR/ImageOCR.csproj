@@ -125,7 +125,7 @@
     <Compile Include="Domain\Interface\IRepository.cs" />
     <Compile Include="Helpers\EmailHelper.cs" />
     <Compile Include="Helpers\ImageHelper.cs" />
-    <Compile Include="Models\ClassA.cs" />
+    <Compile Include="Models\Image.cs" />
     <Compile Include="Services\DataStore.cs" />
     <Compile Include="Services\IDataStore.cs" />
     <Compile Include="Utilities\FileUtility.cs" />

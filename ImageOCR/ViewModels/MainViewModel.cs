@@ -14,26 +14,22 @@ namespace ImageOCR.ViewModels
     class MainViewModel : BaseViewModel
     {
         #region private properties
-        private string helloWord;
-        private object current;
-        private IDataStore<ClassA> _dataService;
+        private string _helloWord;
+        private Image _image;
         #endregion
 
         #region public properties
-        public ICommand WindowCommand { get; set; }
+        public ICommand ImportImageCommand { get; set; }
         public static ObservableCollection<object> List { get; set; }
-        public string HelloWord { get => helloWord; set => SetProperty(ref helloWord, value); }
-        public object Current { get => current; set => SetProperty(ref current, value); }
+        public string HelloWord { get => _helloWord; set => SetProperty(ref _helloWord, value); }
+        public Image Image { get => _image; set => SetProperty(ref _image, value); }
         #endregion
 
         [Inject]
-        public MainViewModel(UserViewModel userVM, SettingViewModel settingVM, IDataStore<ClassA> dataService)
+        public MainViewModel()
         {
             InitProperties();
             InitCommand();
-            Current = settingVM;
-            //var x = _dataService;
-            //_dataService = dataService;
         }
 
         /// <summary>
@@ -49,10 +45,27 @@ namespace ImageOCR.ViewModels
         /// </summary>
         void InitCommand()
         {
-            WindowCommand = new RelayCommand<object>(p => { return true; }, p =>
+            ImportImageCommand = new RelayCommand<object>(p => { return true; }, p =>
             {
-                
+                // Sử dụng OpenFileDialog để chọn file ảnh
+                var openFileDialog = new Microsoft.Win32.OpenFileDialog
+                {
+                    Filter = "Image Files|*.jpg;*.jpeg;*.png;*.bmp;*.gif",
+                    Title = "Select an Image File"
+                };
+
+                if (openFileDialog.ShowDialog() == true)
+                {
+                    // Tạo đối tượng Image và gán thông tin file
+                    Image = new Image
+                    {
+                        Name = System.IO.Path.GetFileName(openFileDialog.FileName),
+                        Path = openFileDialog.FileName,
+                        Capacity = new System.IO.FileInfo(openFileDialog.FileName).Length / 1024.0
+                    };
+                }
             });
+
         }
     }
 }

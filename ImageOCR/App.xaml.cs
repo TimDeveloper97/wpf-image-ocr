@@ -24,7 +24,7 @@ namespace ImageOCR
         public void App_Startup(object sender, StartupEventArgs e)
         {
             IKernel kernel = new StandardKernel();
-            kernel.Bind<IDataStore<ClassA>>().To<DataStore<ClassA>>();
+            kernel.Bind<IDataStore<Image>>().To<DataStore<Image>>();
 
             var appVM = kernel.Get<MainViewModel>();
 

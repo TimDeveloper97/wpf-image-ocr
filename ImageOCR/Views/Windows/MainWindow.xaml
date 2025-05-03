@@ -10,7 +10,7 @@
         xmlns:mah="clr-namespace:MahApps.Metro.Controls;assembly=MahApps.Metro"
         WindowStartupLocation="CenterScreen"
                  
-        Title="MainWindow" Height="650" Width="800">
+        Title="MainWindow" Height="1000" Width="1200">
     <StackPanel>
         <materialDesign:Card Padding="32" Margin="16"
                              HorizontalAlignment="Center" VerticalAlignment="Center">
@@ -28,13 +28,8 @@
         <Image Source="{Binding Image.Path}" Width="300" Height="200" Margin="10,0"/>
         <Button Command="{Binding OCRCommand}" Content="OCR" Margin="10,0"/>
         <Grid>
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="*" />
-                <ColumnDefinition Width="*" />
-            </Grid.ColumnDefinitions>
-            
             <TextBlock Grid.Column="0" Text="{Binding Image.TextEng}" Margin="10"/>
-            <TextBlock Grid.Column="1" Text="{Binding Image.TextVi}" Margin="10"/>
+            <!--<TextBlock Grid.Column="1" Text="{Binding Image.TextVi}" Margin="10"/>-->
         </Grid>
     </StackPanel>
 </mah:MetroWindow>

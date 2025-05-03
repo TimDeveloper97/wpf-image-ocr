@@ -9,6 +9,9 @@ using System.Windows.Input;
 using ImageOCR.Models;
 using ImageOCR.Services;
 using System.Diagnostics;
+using ControlzEx.Standard;
+using System.Text.RegularExpressions;
+using SkiaSharp;
 
 namespace ImageOCR.ViewModels
 {
@@ -74,17 +77,27 @@ namespace ImageOCR.ViewModels
             {
                 try
                 {
-                    /// train data: https://github.com/tesseract-ocr/tessdata
-                    /// download and import to _tessdata folder
-                    using (var img = Tesseract.Pix.LoadFromFile(Image.Path))
+                    // resize image path
+                    string resizedImagePath = System.IO.Path.Combine(System.IO.Path.GetTempPath(), "resized_image.png");
+
+                    // processed image path
+                    string processedImagePath = System.IO.Path.Combine(System.IO.Path.GetTempPath(), "processed_image.png");
+
+                    // change scale
+                    ResizeImage(Image.Path, resizedImagePath, 4);
+
+                    // change color
+                    PreprocessImage(resizedImagePath, processedImagePath);
+
+                    // detect text from image
+                    using (var img = Tesseract.Pix.LoadFromFile(processedImagePath))
                     {
                         // Tesseract engine ENG
-                        using (var engine = new Tesseract.TesseractEngine(@"./_tessdata", "eng", Tesseract.EngineMode.Default))
+                        using (var engine = new Tesseract.TesseractEngine(@"./_tessdata_best", "eng", Tesseract.EngineMode.Default))
                         {
                             // OCR
                             using (var page = engine.Process(img))
                             {
-                                // get text from image
                                 Image.TextEng = page.GetText();
                             }
                         }
@@ -95,10 +108,19 @@ namespace ImageOCR.ViewModels
                             // OCR
                             using (var page = engine.Process(img))
                             {
-                                // get text from image
                                 Image.TextVi = page.GetText();
                             }
                         }
+                    }
+
+                    // delete temp files
+                    if (System.IO.File.Exists(resizedImagePath))
+                    {
+                        System.IO.File.Delete(resizedImagePath);
+                    }
+                    if (System.IO.File.Exists(processedImagePath))
+                    {
+                        System.IO.File.Delete(processedImagePath);
                     }
                 }
                 catch (Exception ex)
@@ -106,7 +128,45 @@ namespace ImageOCR.ViewModels
                     Debug.WriteLine($"Error during OCR: {ex.Message}");
                 }
             });
+        }
 
+        void ResizeImage(string inputPath, string outputPath, int scaleFactor)
+        {
+            using (var input = SKBitmap.Decode(inputPath))
+            {
+                var resized = input.Resize(new SKImageInfo(input.Width * scaleFactor, input.Height * scaleFactor), SKFilterQuality.High);
+                using (var output = System.IO.File.OpenWrite(outputPath))
+                {
+                    resized.Encode(output, SKEncodedImageFormat.Png, 100);
+                }
+            }
+        }
+
+        void PreprocessImage(string inputPath, string outputPath)
+        {
+            using (var input = SKBitmap.Decode(inputPath))
+            {
+                // Chuyển ảnh sang thang độ xám
+                using (var grayImage = input.Copy(SKColorType.Gray8))
+                {
+                    // Đảo ngược màu sắc
+                    for (int y = 0; y < grayImage.Height; y++)
+                    {
+                        for (int x = 0; x < grayImage.Width; x++)
+                        {
+                            var pixel = grayImage.GetPixel(x, y);
+                            var invertedPixel = new SKColor((byte)(255 - pixel.Red), (byte)(255 - pixel.Red), (byte)(255 - pixel.Red));
+                            grayImage.SetPixel(x, y, invertedPixel);
+                        }
+                    }
+
+                    // Lưu ảnh đã xử lý
+                    using (var output = System.IO.File.OpenWrite(outputPath))
+                    {
+                        grayImage.Encode(output, SKEncodedImageFormat.Png, 100);
+                    }
+                }
+            }
         }
     }
 }
